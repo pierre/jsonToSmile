@@ -12,5 +12,7 @@ public class Runner
         String file = args[0];
         InputStream in = JsonInputStreamFactory.getJson(file);
         prettyPrintJson(in);
+
+        System.exit(0);
     }
 }

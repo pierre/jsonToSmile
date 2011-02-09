@@ -12,6 +12,8 @@ import java.io.InputStream;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import static com.ning.metrics.jsonToSmile.JsonUtils.extractDataFromActionCore;
+
 public class JsonInputStreamFactory
 {
     public static InputStream getJson(String file)
@@ -26,6 +28,7 @@ public class JsonInputStreamFactory
 
     private static InputStream getJsonFromActionCore(String url)
     {
+        InputStream in = null;
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         SimpleAsyncHttpClient client = new SimpleAsyncHttpClient.Builder()
             .setUrl(url)
@@ -33,8 +36,13 @@ public class JsonInputStreamFactory
 
         Future future;
         try {
+            long then = System.currentTimeMillis();
             future = client.get(new OutputStreamBodyConsumer(out));
             future.get();
+            System.err.println(String.format("Got data from action-core in %d secs", (System.currentTimeMillis() - then) / 1000));
+            out.close();
+
+            in = extractDataFromActionCore(new ByteArrayInputStream(out.toByteArray()));
         }
         catch (IOException e) {
             System.err.println("Exception when contacting the action-core: " + e.getLocalizedMessage());
@@ -49,8 +57,9 @@ public class JsonInputStreamFactory
             return null;
         }
 
-        return new ByteArrayInputStream(out.toByteArray());
+        return in;
     }
+
 
     private static InputStream getJsonFromFile(String file)
     {
